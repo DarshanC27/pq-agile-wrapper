@@ -1,0 +1,80 @@
+# PQ Agile Wrapper — Default Configuration
+# ==========================================
+
+proxy:
+  listen_host: "0.0.0.0"
+  listen_port: 8443
+  forward_host: "127.0.0.1"
+  forward_port: 8080
+  buffer_size: 65536
+  max_connections: 100
+
+# ML-KEM Configuration
+crypto:
+  # ML-KEM security level: "Kyber512" | "Kyber768" | "Kyber1024"
+  # Kyber768 is recommended (NIST Security Level 3)
+  kem_algorithm: "Kyber768"
+  # Symmetric cipher for data encryption after key encapsulation
+  symmetric_cipher: "AES-256-GCM"
+  # Key rotation interval in seconds (3600 = 1 hour)
+  key_rotation_interval: 3600
+
+# Metadata Evaluator — NCSC-aligned data classification
+classifier:
+  # NCSC target year for full PQC migration
+  ncsc_deadline_year: 2035
+  # Data categories and their expected confidentiality lifespans
+  data_categories:
+    satellite_keys:
+      label: "Satellite Encryption Keys"
+      shelf_life_years: 30
+      priority: "critical"
+    pension_records:
+      label: "Employee Pension Records"
+      shelf_life_years: 50
+      priority: "critical"
+    research_ip:
+      label: "Research Intellectual Property"
+      shelf_life_years: 25
+      priority: "high"
+    medical_records:
+      label: "Medical / Health Data"
+      shelf_life_years: 40
+      priority: "critical"
+    council_planning:
+      label: "Council Planning Documents"
+      shelf_life_years: 20
+      priority: "medium"
+    general_comms:
+      label: "General Communications"
+      shelf_life_years: 5
+      priority: "low"
+
+  # Metadata header name used to tag data streams
+  metadata_header: "X-PQ-Data-Class"
+  # Default action if no metadata tag is found
+  default_action: "apply_shield"  # "apply_shield" | "pass_through"
+
+# Fail-safe Configuration
+failsafe:
+  # If PQ layer latency exceeds this (ms), fall back to classical
+  latency_threshold_ms: 50
+  # If key vault is unreachable, revert to classical + alert
+  vault_timeout_ms: 2000
+  # Alert webhook URL (Slack, Teams, email gateway, etc.)
+  alert_webhook: ""
+  # Enable/disable fail-safe fallback
+  enabled: true
+
+# Key Vault
+vault:
+  # Where to store generated lattice keys
+  storage_path: "./data/keys"
+  # Maximum cached keys before rotation
+  max_cached_keys: 50
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG | INFO | WARNING | ERROR
+  format: "structured"  # "structured" | "plain"
+  log_file: "./logs/shadow_proxy.log"

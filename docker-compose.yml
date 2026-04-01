@@ -1,0 +1,58 @@
+# PQ Agile Wrapper — Full Demo Stack
+#
+# Spins up:
+#   1. Shadow Proxy (the PQ security sidecar)
+#   2. Legacy Server (simulated Surrey council / satellite database)
+#
+# Usage:
+#   docker-compose up --build
+#
+# Then run the demo client:
+#   python demo/client.py
+
+version: "3.9"
+
+services:
+  # The Legacy Server — simulates an existing application
+  legacy-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["python", "demo/legacy_server.py"]
+    ports:
+      - "8080:8080"
+    networks:
+      - pq-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.settimeout(2); s.connect(('localhost',8080)); s.close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # The Shadow Proxy — PQ security sidecar
+  shadow-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8443:8443"
+    environment:
+      - PQ_FORWARD_HOST=legacy-server
+      - PQ_FORWARD_PORT=8080
+      - PQ_LOG_LEVEL=INFO
+    depends_on:
+      legacy-server:
+        condition: service_healthy
+    volumes:
+      - proxy-data:/app/data
+      - proxy-logs:/app/logs
+    networks:
+      - pq-network
+
+networks:
+  pq-network:
+    driver: bridge
+
+volumes:
+  proxy-data:
+  proxy-logs:
