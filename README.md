@@ -109,6 +109,3 @@ The metadata evaluator classifies data against the NCSC 2035 migration deadline:
 - **Python asyncio** — high-performance async TCP proxy
 - **Docker** — single-container deployment
 
-## Team UoSurrey
-
-Kiran Pun · Darshan · Bhanuteja
